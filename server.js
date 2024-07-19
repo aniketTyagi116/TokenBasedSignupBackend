@@ -3,24 +3,29 @@ require('dotenv').config()
 const express = require('express');
 const app = express();
 const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 app.use(express.json())
 
 const users = []
 
-app.post('/signup', (req, res) =>{
-     const user = { name: req.body.name, password: req.body.password}
-     users.push(user)
-     res.send('success')
+app.post('/signup',async (req, res) =>{
+  const existingUser = users.find(user => user.name === req.body.name);
+  if (existingUser) {
+      return res.status(400).send('User already exists');
+  }
+  const hashedPassword = await bcrypt.hash(req.body.password, 10)
+  const user = { name: req.body.name, password: hashedPassword }
+  users.push(user)
+  res.send('success')
 })
 
-app.post('/login', (req, res) => {
+app.post('/login', async(req, res) => {
     const user = users.find(user => user.name === req.body.name);
     if (user == null) {
         return res.status(400).send('Cannot find user');
     }
-
-    if (req.body.password === user.password) {
+    if(await bcrypt.compare(req.body.password, user.password)) {
         const accessToken = generateAccessToken(user)
         res.json({ accessToken: accessToken})
     } else {
