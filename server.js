@@ -12,7 +12,7 @@ const users = []
 app.post('/signup',async (req, res) =>{
   const existingUser = users.find(user => user.name === req.body.name);
   if (existingUser) {
-      return res.status(400).send('User already exists');
+      return res.send('User already exists');
   }
   const hashedPassword = await bcrypt.hash(req.body.password, 10)
   const user = { name: req.body.name, password: hashedPassword }
